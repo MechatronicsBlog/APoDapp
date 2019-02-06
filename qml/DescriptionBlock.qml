@@ -1,3 +1,16 @@
+/////////////////////////////////////////////////////////////////////////
+//  Name: DescriptionBlock
+//  Purpose: Description block QML component
+//
+//  Author:  Javier Bonilla
+//  Version: 1.0
+//  Date:    06/02/2019
+//
+//  Copyright 2019 - Mechatronics Blog - https://www.mechatronicsblog.com
+//
+//  More info and tutorial: https://www.mechatronicsblog.com
+/////////////////////////////////////////////////////////////////////////
+
 import VPlayApps 1.0
 import QtQuick 2.11
 
