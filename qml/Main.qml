@@ -3,8 +3,8 @@
 //  Purpose: Astronomy Picture of the Day QML and Javascript app
 //
 //  Author:  Javier Bonilla
-//  Version: 1.0
-//  Date:    06/02/2019
+//  Version: 1.1
+//  Date:    07/02/2019
 //
 //  Copyright 2019 - Mechatronics Blog - https://www.mechatronicsblog.com
 //
@@ -67,7 +67,7 @@ App {
 
                     DatePicker{
                         id: datePicker
-                        onAccepted: request_nasa_image(dateStr)
+                        onAccepted: request_nasa_image_QML(dateStr)
                     }
 
                     AppText{
@@ -94,7 +94,6 @@ App {
                         from: 0
                         to: 1
                     }
-
 
                     Image {
                         id: nasaImage
@@ -123,67 +122,6 @@ App {
         }
     }
 
-    function request_nasa_image(dateStr)
-    {
-        const apiKey  = "NFzBwcb7GKLssQ7mzIEbyidXglcPhQlz5iaUiZfU"
-        const Http_OK = 200
-
-        var url    = "https://api.nasa.gov/planetary/apod"
-        var params = "date=" + dateStr + "&api_key=" + apiKey
-
-        clearInfo()
-        get_request(url,params,
-            function(http)
-            {
-                if (http.status === Http_OK)
-                {
-                    var res_json = JSON.parse(http.responseText)
-                    if (res_json !== {})
-                    {
-                        message.color         = Theme.tintColor
-                        message.text          = res_json.title
-                        descriptionBlock.text = res_json.explanation
-
-                        if (res_json.media_type === "image")
-                            nasaImage.source = res_json.url
-                        else if (res_json.media_type === "video")
-                        {
-                            nasaVideo.loadVideo(youtube_parser(res_json.url),true)
-                            nasaVideo.visible = true
-                        }
-
-                        if (res_json.copyright !== undefined)
-                        {
-                            author.visible = true
-                            author.text = "Copyright " + IconType.copyright + " " + res_json.copyright
-                        }
-                        else
-                            author.visible = false
-
-                        return
-                    }
-                }
-                message.color = "red"
-                message.text  = qsTr("No data found")
-            }
-        )
-    }
-
-    function get_request(url,params,callback)
-    {
-        var http = new XMLHttpRequest()
-
-        http.onreadystatechange = function(myhttp)
-        {
-            return function() {
-                if (myhttp.readyState === XMLHttpRequest.DONE)
-                    callback(myhttp)
-            }
-        }(http)
-        http.open("GET", url + "?" + params, true)
-        http.send()
-    } 
-
     function clearInfo()
     {
         message.text           = ""
@@ -199,5 +137,102 @@ App {
         var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/
         var match  = url.match(regExp)
         return (match&&match[7].length === 11)? match[7] : ""
+    }
+
+    function requestError()
+    {
+        message.color = "red"
+        message.text  = qsTr("No data found")
+    }
+
+    function requestSuccess(res_json)
+    {
+        if (res_json && res_json !== {})
+        {
+            message.color         = Theme.tintColor
+            message.text          = res_json.title
+            descriptionBlock.text = res_json.explanation
+
+            if (res_json.media_type === "image")
+                nasaImage.source = res_json.url
+            else if (res_json.media_type === "video")
+            {
+                nasaVideo.loadVideo(youtube_parser(res_json.url),true)
+                nasaVideo.visible = true
+            }
+
+            if (res_json.copyright !== undefined)
+            {
+                author.visible = true
+                author.text = "Copyright " + IconType.copyright + " " + res_json.copyright
+            }
+            else
+                author.visible = false
+
+            return true
+        }
+        return false
+    }
+
+    function request_nasa_image_QML(dateStr)
+    {
+        const url_base   = "https://api.nasa.gov/planetary/apod"
+        const apiKey     = "DEMO_KEY"
+        const Http_OK    = 200
+        const timeout_ms = 5000
+
+        var params   = "date=" + dateStr + "&api_key=" + apiKey
+        var url      = url_base + "?" + params
+
+        clearInfo()
+        HttpRequest
+          .get(url)
+          .timeout(timeout_ms)
+          .then(function(res)
+          {
+            if (res.status === Http_OK)
+                if (requestSuccess(res.body)) return
+            requestError()
+          })
+          .catch(function(err)
+          {
+            requestError()
+          });
+    }
+
+    function request_nasa_image_JS(dateStr)
+    {
+        const url_base = "https://api.nasa.gov/planetary/apod"
+        const apiKey   = "DEMO_KEY"
+        const Http_OK  = 200
+
+        var params = "date=" + dateStr + "&api_key=" + apiKey
+
+        clearInfo()
+        get_request(url_base,params,
+                    function(http)
+                    {
+                        if (http.status === Http_OK)
+                        {
+                            var res_json = JSON.parse(http.responseText)
+                            if (requestSuccess(res_json)) return
+                        }
+                        requestError()
+                    })
+    }
+
+    function get_request(url,params,callback)
+    {
+        var http = new XMLHttpRequest()
+
+        http.onreadystatechange = function(myhttp)
+        {
+            return function() {
+                if (myhttp.readyState === XMLHttpRequest.DONE)
+                    callback(myhttp)
+            }
+        }(http)
+        http.open("GET", url + "?" + params, true)
+        http.send()
     }
 }
