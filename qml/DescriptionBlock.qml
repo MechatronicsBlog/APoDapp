@@ -11,8 +11,8 @@
 //  More info and tutorial: https://www.mechatronicsblog.com
 /////////////////////////////////////////////////////////////////////////
 
-import VPlayApps 1.0
 import QtQuick 2.11
+import Felgo 3.0
 
 Rectangle{
     id: root

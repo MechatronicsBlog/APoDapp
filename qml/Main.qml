@@ -3,19 +3,18 @@
 //  Purpose: Astronomy Picture of the Day QML and Javascript app
 //
 //  Author:  Javier Bonilla
-//  Version: 1.1
-//  Date:    07/02/2019
+//  Version: 1.2
+//  Date:    08/02/2019
 //
 //  Copyright 2019 - Mechatronics Blog - https://www.mechatronicsblog.com
 //
 //  More info and tutorial: https://www.mechatronicsblog.com
 /////////////////////////////////////////////////////////////////////////
 
-import VPlayApps 1.0
-import VPlay 2.0
 import QtQuick 2.11
 import QtQuick.Controls 2.4 as Quick2
 import QtMultimedia 5.8
+import Felgo 3.0
 
 App {
     id: app
@@ -25,6 +24,8 @@ App {
       Theme.navigationBar.backgroundColor = Theme.colors.tintColor
       Theme.navigationBar.titleColor = "white"
     }
+
+    property bool isVideo: false
 
     NavigationStack {
 
@@ -40,10 +41,12 @@ App {
             }
 
             Flickable{
+                id: flickable
                 anchors.fill: parent
                 contentWidth: column.width
                 contentHeight: column.height
                 flickableDirection: Flickable.VerticalFlick
+                interactive: !dateControl.isDialogOpenend
 
                 Column{
                     id: column
@@ -65,9 +68,11 @@ App {
                         text: qsTr("Choose date")
                     }
 
-                    DatePicker{
-                        id: datePicker
+                    DateControl{
+                        id: dateControl
                         onAccepted: request_nasa_image_QML(dateStr)
+                        onOpened: hideVideo(isVideo)
+                        onCancelled: showVideo(isVideo)
                     }
 
                     AppText{
@@ -114,6 +119,13 @@ App {
                         visible: false
                     }
 
+                    Rectangle{
+                        id: rectangle
+                        color: "black"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        visible: false
+                    }
+
                     DescriptionBlock{
                         id: descriptionBlock
                     }
@@ -126,10 +138,32 @@ App {
     {
         message.text           = ""
         nasaImage.source       = ""
-        nasaVideo.videoId      = ""
         nasaVideo.visible      = false
+        isVideo                = false
+        rectangle.visible      = false
         author.text            = ""
         descriptionBlock.text  = ""
+    }
+
+    function hideVideo(isVideo)
+    {
+        if (isVideo)
+        {
+            nasaVideo.stop()
+            rectangle.width   = nasaVideo.width
+            rectangle.height  = nasaVideo.height
+            nasaVideo.visible = false
+            rectangle.visible = true
+        }
+    }
+
+    function showVideo(isVideo)
+    {
+        if (isVideo)
+        {
+            rectangle.visible = false
+            nasaVideo.visible = true
+        }
     }
 
     function youtube_parser(url)
@@ -158,13 +192,14 @@ App {
             else if (res_json.media_type === "video")
             {
                 nasaVideo.loadVideo(youtube_parser(res_json.url),true)
+                isVideo = true
                 nasaVideo.visible = true
             }
 
             if (res_json.copyright !== undefined)
             {
                 author.visible = true
-                author.text = "Copyright " + IconType.copyright + " " + res_json.copyright
+                author.text = "Copyright " + res_json.copyright
             }
             else
                 author.visible = false
@@ -177,7 +212,7 @@ App {
     function request_nasa_image_QML(dateStr)
     {
         const url_base   = "https://api.nasa.gov/planetary/apod"
-        const apiKey     = "DEMO_KEY"
+        const apiKey     = "8rNQDr0C0SuG8dFFjnlWu7Y4SVF8erXCNYWSKLXo" //"DEMO_KEY"
         const Http_OK    = 200
         const timeout_ms = 5000
 
