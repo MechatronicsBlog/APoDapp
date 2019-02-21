@@ -6,4 +6,6 @@ Tutorial: https://mechatronicsblog.com/getting-started-tutorial-qt-qml-and-felgo
 
 App in action: https://youtu.be/K0lcbY4njyQ
 
-
+![App general view](/screenshots/App_general.png)
+![App media description](/screenshots/App_description.png)
+![App calendar](/screenshots/App_calendar.png)
